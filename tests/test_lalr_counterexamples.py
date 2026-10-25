@@ -199,6 +199,20 @@ class TestLalrCounterexamples(TestCase):
         self.assertIn('Shift/Reduce conflict', str(error.exception))
         self.assertNotIn('Example:', str(error.exception))
 
+    def test_large_nullable_derivation_preserves_original_diagnostic(self):
+        for suffix in ('pad "x"', '"x" pad'):
+            with self.subTest(suffix=suffix):
+                rules = [f'start: "p" chosen {suffix} | "p" "a" "x"',
+                         'chosen: "a"', 'pad: n0']
+                rules.extend(f'n{i}: n{i + 1} n{i + 1}' for i in range(13))
+                rules.append('n13:')
+                with self.assertRaises(GrammarError) as error:
+                    Lark('\n'.join(rules), parser='lalr', strict=True)
+                message = str(error.exception)
+                self.assertIn('Shift/Reduce conflict', message)
+                self.assertLess(len(message), 1024)
+                self.assertFalse('Example:' in message)
+
     def test_no_search_for_conflict_free_grammar(self):
         with patch('lark.parsers.lalr_analysis.CounterexampleGenerator') as generator:
             Lark('start: "a"', parser='lalr', debug=True, strict=True).parse('a')

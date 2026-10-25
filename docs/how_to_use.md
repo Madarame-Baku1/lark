@@ -107,8 +107,8 @@ report `Example: expr PLUS expr * PLUS expr`.
 
 Examples use terminal and rule names; `*` marks the next input position. Separate
 examples can indicate contexts that were merged by LALR analysis, rather than an
-ambiguous input. The search is bounded, so the original conflict diagnostic is
-still reported when no example is found within the search limit.
+ambiguous input. The search and derivation size are bounded, so the original
+conflict diagnostic is still reported when an example exceeds those limits.
 
 ### Strict-Mode
 

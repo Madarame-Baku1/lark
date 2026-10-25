@@ -183,6 +183,16 @@ class CounterexampleGenerator:
                 parent.children[index] = deepcopy(self.empty[symbol][1])
         return tree if lookahead == _END else None
 
+    def _within_budget(self, tree):
+        stack = [tree]
+        for _ in range(self.max_nodes):
+            if not stack:
+                return True
+            node = stack.pop()
+            if isinstance(node, Tree):
+                stack.extend(node.children)
+        return not stack
+
     @classmethod
     def _display_tree(cls, tree):
         return Tree(tree.data, [
@@ -210,7 +220,7 @@ class CounterexampleGenerator:
         if second is None:
             return None
         trees = [self._complete(self._tree(path), lookahead) for path in (first, second)]
-        if any(tree is None for tree in trees):
+        if any(tree is None or not self._within_budget(tree) for tree in trees):
             return None
         for tree in trees:
             after_dot = False
@@ -219,6 +229,8 @@ class CounterexampleGenerator:
                     after_dot = True
                 elif after_dot and symbol in self.empty:
                     parent.children[index] = deepcopy(self.empty[symbol][1])
+            if not self._within_budget(tree):
+                return None
         return trees
 
     def explain(self, state, lookahead, rule, other_rule=None):
